@@ -1,6 +1,6 @@
 import { useState, useEffect, useRef, useCallback } from 'react'
 import { motion, useScroll, useTransform, useSpring, useMotionValue, AnimatePresence } from 'framer-motion'
-import { clsx, ClassValue } from 'clsx'
+import { clsx } from 'clsx'
 import { twMerge } from 'tailwind-merge'
 
 // Utility for Tailwind classes
@@ -8,13 +8,12 @@ function cn(...inputs) {
   return twMerge(clsx(inputs))
 }
 
-// Safe Icon Component
+// Safe Icon Component - uses inline SVGs to avoid import issues
 const SafeIcon = ({ name, size = 24, className, color }) => {
   const icons = {
     'menu': <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={className} style={color ? { color } : {}}><line x1="4" x2="20" y1="12" y2="12"/><line x1="4" x2="20" y1="6" y2="6"/><line x1="4" x2="20" y1="18" y2="18"/></svg>,
     'x': <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={className} style={color ? { color } : {}}><path d="M18 6 6 18"/><path d="m6 6 12 12"/></svg>,
     'arrow-right': <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={className} style={color ? { color } : {}}><path d="M5 12h14"/><path d="m12 5 7 7-7 7"/></svg>,
-    'arrow-left': <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={className} style={color ? { color } : {}}><path d="M12 19l-7-7 7-7"/><path d="M19 12H5"/></svg>,
     'chevron-right': <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={className} style={color ? { color } : {}}><path d="m9 18 6-6-6-6"/></svg>,
     'activity': <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={className} style={color ? { color } : {}}><path d="M22 12h-2.48a2 2 0 0 0-1.93 1.46l-2.35 8.36a.25.25 0 0 1-.48 0L9.24 2.18a.25.25 0 0 0-.48 0l-2.35 8.36A2 2 0 0 1 4.49 12H2"/></svg>,
     'zap': <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={className} style={color ? { color } : {}}><polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"/></svg>,
@@ -23,27 +22,33 @@ const SafeIcon = ({ name, size = 24, className, color }) => {
     'diamond': <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={className} style={color ? { color } : {}}><path d="M2.7 10.3a2.41 2.41 0 0 0 0 3.41l7.59 7.59a2.41 2.41 0 0 0 3.41 0l7.59-7.59a2.41 2.41 0 0 0 0-3.41l-7.59-7.59a2.41 2.41 0 0 0-3.41 0Z"/></svg>,
     'hexagon': <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={className} style={color ? { color } : {}}><path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z"/></svg>,
     'external-link': <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={className} style={color ? { color } : {}}><path d="M15 3h6v6"/><path d="M10 14 21 3"/><path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"/></svg>,
+    'trending-up': <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={className} style={color ? { color } : {}}><polyline points="22 7 13.5 15.5 8.5 10.5 2 17"/><polyline points="16 7 22 7 22 13"/></svg>,
+    'shield': <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={className} style={color ? { color } : {}}><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>,
+    'lock': <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className={className} style={color ? { color } : {}}><rect width="18" height="11" x="3" y="11" rx="2" ry="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>,
   }
 
   return icons[name] || icons['circle']
 }
 
 // ============================================
-// CUSTOM LIQUID CURSOR
+// ENHANCED CUSTOM LIQUID CURSOR
 // ============================================
 const LiquidCursor = () => {
   const cursorRef = useRef(null)
   const [isHovering, setIsHovering] = useState(false)
-  const [velocity, setVelocity] = useState({ x: 0, y: 0 })
+  const [velocity, setVelocity] = useState({ x: 0, y: 0, speed: 0 })
+  const [isVisible, setIsVisible] = useState(false)
   const lastPos = useRef({ x: 0, y: 0 })
   const rafId = useRef(null)
 
-  const springConfig = { damping: 25, stiffness: 300 }
+  const springConfig = { damping: 20, stiffness: 400 }
   const cursorX = useSpring(0, springConfig)
   const cursorY = useSpring(0, springConfig)
 
   useEffect(() => {
     const handleMouseMove = (e) => {
+      if (!isVisible) setIsVisible(true)
+
       const currentX = e.clientX
       const currentY = e.clientY
 
@@ -60,14 +65,22 @@ const LiquidCursor = () => {
     }
 
     const handleMouseOver = (e) => {
-      if (e.target.tagName === 'A' || e.target.tagName === 'BUTTON' || e.target.closest('a') || e.target.closest('button')) {
+      const target = e.target
+      if (target.tagName === 'A' || target.tagName === 'BUTTON' || target.closest('a') || target.closest('button') || target.closest('[data-cursor-hover]')) {
         setIsHovering(true)
       }
     }
 
-    const handleMouseOut = () => {
-      setIsHovering(false)
+    const handleMouseOut = (e) => {
+      const target = e.target
+      if (target.tagName === 'A' || target.tagName === 'BUTTON' || target.closest('a') || target.closest('button') || target.closest('[data-cursor-hover]')) {
+        setIsHovering(false)
+      }
     }
+
+    // Check if device has fine pointer (mouse)
+    const hasPointer = window.matchMedia('(pointer: fine)').matches
+    if (!hasPointer) return
 
     window.addEventListener('mousemove', handleMouseMove, { passive: true })
     document.addEventListener('mouseover', handleMouseOver, { passive: true })
@@ -79,15 +92,17 @@ const LiquidCursor = () => {
       document.removeEventListener('mouseout', handleMouseOut)
       if (rafId.current) cancelAnimationFrame(rafId.current)
     }
-  }, [cursorX, cursorY])
+  }, [cursorX, cursorY, isVisible])
 
-  const deformScale = Math.min(velocity.speed * 0.02, 1.5)
+  const deformScale = Math.min(velocity.speed * 0.03, 1.8)
   const deformRotate = Math.atan2(velocity.y, velocity.x) * (180 / Math.PI)
+
+  if (!isVisible) return null
 
   return (
     <motion.div
       ref={cursorRef}
-      className="custom-cursor fixed top-0 left-0 pointer-events-none z-[10000] mix-blend-difference"
+      className="custom-cursor fixed top-0 left-0 pointer-events-none z-[10000]"
       style={{
         x: cursorX,
         y: cursorY,
@@ -98,56 +113,117 @@ const LiquidCursor = () => {
       <motion.div
         className="relative"
         animate={{
-          scale: isHovering ? 2 : 1 + deformScale * 0.3,
+          scale: isHovering ? 2.5 : 1 + deformScale * 0.4,
           rotate: deformRotate,
-          width: isHovering ? 40 : 24 + deformScale * 10,
-          height: isHovering ? 40 : 24 - deformScale * 5,
         }}
-        transition={{ type: 'spring', damping: 20, stiffness: 400 }}
+        transition={{ type: 'spring', damping: 15, stiffness: 500 }}
       >
-        <div className="w-full h-full rounded-full bg-white/90 blur-[2px]" />
+        {/* Outer glow */}
         <motion.div
-          className="absolute inset-0 rounded-full"
-          style={{
-            background: 'radial-gradient(circle at 30% 30%, rgba(255,255,255,1), rgba(200,200,200,0.8))',
-          }}
+          className="absolute -inset-4 rounded-full bg-white/20 blur-xl"
           animate={{
-            scale: [1, 1.1, 1],
-          }}
-          transition={{
-            duration: 2,
-            repeat: Infinity,
-            ease: 'easeInOut',
+            scale: isHovering ? 1.5 : 1,
+            opacity: isHovering ? 0.6 : 0.3,
           }}
         />
+
+        {/* Main cursor body */}
+        <motion.div
+          className="relative w-6 h-6 rounded-full bg-white"
+          animate={{
+            width: isHovering ? 32 : 24 + deformScale * 8,
+            height: isHovering ? 32 : 24 - deformScale * 4,
+          }}
+          style={{
+            boxShadow: '0 0 20px rgba(255,255,255,0.5), inset 0 0 10px rgba(255,255,255,0.8)',
+          }}
+        >
+          {/* Inner liquid effect */}
+          <motion.div
+            className="absolute inset-1 rounded-full bg-gradient-to-br from-white via-gray-100 to-gray-300"
+            animate={{
+              scale: [1, 1.1, 1],
+            }}
+            transition={{
+              duration: 2,
+              repeat: Infinity,
+              ease: 'easeInOut',
+            }}
+          />
+        </motion.div>
+
+        {/* Trailing droplets for fast movement */}
+        {velocity.speed > 15 && (
+          <>
+            <motion.div
+              className="absolute w-2 h-2 rounded-full bg-white/60"
+              initial={{ scale: 1, x: 0, y: 0, opacity: 0.8 }}
+              animate={{ scale: 0, x: -velocity.x * 2, y: -velocity.y * 2, opacity: 0 }}
+              transition={{ duration: 0.5 }}
+            />
+            <motion.div
+              className="absolute w-1.5 h-1.5 rounded-full bg-white/40"
+              initial={{ scale: 1, x: 0, y: 0, opacity: 0.6 }}
+              animate={{ scale: 0, x: -velocity.x * 3, y: -velocity.y * 3, opacity: 0 }}
+              transition={{ duration: 0.6 }}
+            />
+          </>
+        )}
       </motion.div>
     </motion.div>
   )
 }
 
 // ============================================
-// GRAVITY NAVIGATION
+// TRANSFORMING HEADER
 // ============================================
-const GravityNav = () => {
+const TransformingHeader = () => {
   const [isOpen, setIsOpen] = useState(false)
+  const [isScrolled, setIsScrolled] = useState(false)
   const [hoveredItem, setHoveredItem] = useState(null)
+
   const navItems = ['PROTOCOL', 'VAULT', 'PULSE', 'ACCESS']
+
+  useEffect(() => {
+    const handleScroll = () => {
+      const scrollY = window.scrollY
+      const heroHeight = window.innerHeight * 0.8
+      setIsScrolled(scrollY > heroHeight)
+    }
+
+    window.addEventListener('scroll', handleScroll, { passive: true })
+    return () => window.removeEventListener('scroll', handleScroll)
+  }, [])
 
   return (
     <>
-      {/* Desktop Navigation */}
-      <nav className="fixed top-0 left-0 right-0 z-50 px-8 py-6">
-        <div className="flex items-center justify-between">
+      <motion.nav
+        className={cn(
+          "fixed top-4 left-1/2 -translate-x-1/2 z-50 transition-all duration-700 ease-out",
+          isScrolled
+            ? "w-[calc(100%-2rem)] max-w-6xl"
+            : "w-[calc(100%-2rem)] max-w-[calc(100%-2rem)]"
+        )}
+        initial={{ y: -100, opacity: 0 }}
+        animate={{ y: 0, opacity: 1 }}
+        transition={{ duration: 0.8, ease: [0.16, 1, 0.3, 1] }}
+      >
+        <motion.div
+          className={cn(
+            "flex items-center justify-between px-6 py-4 backdrop-blur-xl transition-all duration-700",
+            isScrolled
+              ? "bg-black/60 border border-white/10 rounded-2xl shadow-2xl shadow-black/50"
+              : "bg-transparent"
+          )}
+        >
           <motion.div
-            className="font-serif text-xl tracking-widest chrome-text"
-            initial={{ opacity: 0, y: -20 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.8 }}
+            className="font-sans text-xl font-bold tracking-tight chrome-text"
+            whileHover={{ scale: 1.05 }}
           >
             AETHER
           </motion.div>
 
-          <div className="hidden md:flex items-center gap-12">
+          <div className="hidden md:flex items-center gap-8">
             {navItems.map((item, index) => (
               <GravityNavItem
                 key={item}
@@ -156,19 +232,20 @@ const GravityNav = () => {
                 isHovered={hoveredItem === item}
                 onHover={() => setHoveredItem(item)}
                 onLeave={() => setHoveredItem(null)}
+                isScrolled={isScrolled}
               />
             ))}
           </div>
 
           <motion.button
-            className="md:hidden text-white p-2"
+            className="md:hidden text-white p-2 hover:bg-white/10 rounded-lg transition-colors"
             onClick={() => setIsOpen(!isOpen)}
             whileTap={{ scale: 0.95 }}
           >
             {isOpen ? <SafeIcon name="x" size={24} /> : <SafeIcon name="menu" size={24} />}
           </motion.button>
-        </div>
-      </nav>
+        </motion.div>
+      </motion.nav>
 
       {/* Mobile Menu */}
       <AnimatePresence>
@@ -177,7 +254,7 @@ const GravityNav = () => {
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
-            className="fixed inset-0 bg-neutral-950/95 backdrop-blur-xl z-40 flex items-center justify-center"
+            className="fixed inset-0 bg-black/95 backdrop-blur-xl z-40 flex items-center justify-center"
           >
             <div className="flex flex-col gap-8 text-center">
               {navItems.map((item, index) => (
@@ -189,7 +266,7 @@ const GravityNav = () => {
                   exit={{ opacity: 0, y: -20 }}
                   transition={{ delay: index * 0.1 }}
                   onClick={() => setIsOpen(false)}
-                  className="font-serif text-4xl text-white hover:text-orange-500 transition-colors"
+                  className="font-sans text-4xl font-bold text-white hover:text-orange-500 transition-colors"
                 >
                   {item}
                 </motion.a>
@@ -202,7 +279,7 @@ const GravityNav = () => {
   )
 }
 
-const GravityNavItem = ({ label, index, isHovered, onHover, onLeave }) => {
+const GravityNavItem = ({ label, index, isHovered, onHover, onLeave, isScrolled }) => {
   const itemRef = useRef(null)
   const [position, setPosition] = useState({ x: 0, y: 0 })
 
@@ -214,10 +291,9 @@ const GravityNavItem = ({ label, index, isHovered, onHover, onLeave }) => {
     const distX = e.clientX - centerX
     const distY = e.clientY - centerY
 
-    // Magnetic pull effect
     setPosition({
-      x: distX * 0.3,
-      y: distY * 0.3,
+      x: distX * 0.2,
+      y: distY * 0.2,
     })
   }
 
@@ -241,11 +317,10 @@ const GravityNavItem = ({ label, index, isHovered, onHover, onLeave }) => {
     >
       <a
         href={`#${label.toLowerCase()}`}
-        className="font-mono text-xs tracking-[0.2em] text-gray-400 hover:text-white transition-colors relative block py-2"
+        className="font-mono text-[11px] tracking-[0.2em] text-gray-400 hover:text-white transition-colors relative block py-2 px-3"
       >
         <span className="relative z-10">{label}</span>
 
-        {/* Distortion effect on hover */}
         <AnimatePresence>
           {isHovered && (
             <>
@@ -253,21 +328,13 @@ const GravityNavItem = ({ label, index, isHovered, onHover, onLeave }) => {
                 initial={{ opacity: 0, scale: 0.8 }}
                 animate={{ opacity: 1, scale: 1 }}
                 exit={{ opacity: 0, scale: 0.8 }}
-                className="absolute -inset-4 bg-gradient-radial from-orange-500/10 to-transparent rounded-full blur-xl"
+                className="absolute -inset-2 bg-orange-500/10 rounded-lg blur-md"
               />
               <motion.div
-                initial={{ opacity: 0, x: -20 }}
-                animate={{ opacity: 0.5, x: 0 }}
-                exit={{ opacity: 0, x: 20 }}
-                transition={{ duration: 0.3 }}
-                className="absolute top-1/2 -translate-y-1/2 -left-6 w-4 h-[1px] bg-orange-500"
-              />
-              <motion.div
-                initial={{ opacity: 0, x: 20 }}
-                animate={{ opacity: 0.5, x: 0 }}
-                exit={{ opacity: 0, x: -20 }}
-                transition={{ duration: 0.3 }}
-                className="absolute top-1/2 -translate-y-1/2 -right-6 w-4 h-[1px] bg-orange-500"
+                initial={{ width: 0 }}
+                animate={{ width: '100%' }}
+                exit={{ width: 0 }}
+                className="absolute bottom-0 left-0 h-[2px] bg-gradient-to-r from-transparent via-orange-500 to-transparent"
               />
             </>
           )}
@@ -278,13 +345,12 @@ const GravityNavItem = ({ label, index, isHovered, onHover, onLeave }) => {
 }
 
 // ============================================
-// LIQUID MERCURY SPHERE
+// ENHANCED 3D LIQUID MERCURY SPHERE
 // ============================================
 const LiquidMercurySphere = () => {
   const sphereRef = useRef(null)
   const [mousePos, setMousePos] = useState({ x: 0, y: 0 })
   const [isNear, setIsNear] = useState(false)
-  const [scrollProgress, setScrollProgress] = useState(0)
   const [shattered, setShattered] = useState(false)
 
   const { scrollY } = useScroll()
@@ -299,16 +365,18 @@ const LiquidMercurySphere = () => {
       const distY = e.clientY - centerY
       const distance = Math.sqrt(distX * distX + distY * distY)
 
-      setMousePos({ x: distX / 20, y: distY / 20 })
-      setIsNear(distance < 300)
+      setMousePos({ x: distX / 15, y: distY / 15 })
+      setIsNear(distance < 400)
     }
 
     const handleScroll = () => {
       const scrollPercent = window.scrollY / (window.innerHeight * 0.5)
-      setScrollProgress(Math.min(scrollPercent, 1))
 
       if (scrollPercent > 0.8 && !shattered) {
         setShattered(true)
+      }
+      if (scrollPercent < 0.3 && shattered) {
+        setShattered(false)
       }
     }
 
@@ -321,56 +389,81 @@ const LiquidMercurySphere = () => {
     }
   }, [shattered])
 
-  const scale = useTransform(scrollY, [0, 500], [1, 0.5])
+  const scale = useTransform(scrollY, [0, 500], [1, 0.3])
   const opacity = useTransform(scrollY, [0, 400], [1, 0])
 
   return (
-    <div className="relative flex items-center justify-center min-h-screen">
+    <div className="relative flex items-center justify-center min-h-screen perspective-[2000px]">
       {/* Shattered Droplets */}
       <AnimatePresence>
         {shattered && (
           <>
-            {[...Array(12)].map((_, i) => (
-              <motion.div
-                key={i}
-                initial={{
-                  scale: 0,
-                  x: 0,
-                  y: 0,
-                  opacity: 0.8
-                }}
-                animate={{
-                  scale: Math.random() * 0.3 + 0.1,
-                  x: (Math.random() - 0.5) * 800,
-                  y: (Math.random() - 0.5) * 800 - 200,
-                  opacity: 0
-                }}
-                transition={{
-                  duration: 2 + Math.random(),
-                  ease: [0.23, 1, 0.32, 1]
-                }}
-                className="absolute w-32 h-32 rounded-full liquid-sphere"
-                style={{
-                  filter: 'blur(1px)',
-                }}
-              />
-            ))}
+            {[...Array(16)].map((_, i) => {
+              const angle = (i / 16) * Math.PI * 2
+              const distance = 300 + Math.random() * 200
+              return (
+                <motion.div
+                  key={i}
+                  initial={{
+                    scale: 0.8,
+                    x: 0,
+                    y: 0,
+                    opacity: 1
+                  }}
+                  animate={{
+                    scale: Math.random() * 0.2 + 0.05,
+                    x: Math.cos(angle) * distance,
+                    y: Math.sin(angle) * distance - 100,
+                    opacity: 0
+                  }}
+                  exit={{
+                    scale: 0,
+                    opacity: 0
+                  }}
+                  transition={{
+                    duration: 1.5 + Math.random() * 0.5,
+                    ease: [0.23, 1, 0.32, 1]
+                  }}
+                  className="absolute w-32 h-32 rounded-full pointer-events-none"
+                  style={{
+                    background: 'radial-gradient(circle at 30% 30%, rgba(255,255,255,0.9), rgba(150,150,150,0.4), transparent)',
+                    filter: 'blur(0.5px)',
+                  }}
+                />
+              )
+            })}
           </>
         )}
       </AnimatePresence>
 
-      {/* Main Sphere */}
+      {/* Main Sphere Container */}
       <motion.div
         ref={sphereRef}
         className="relative"
-        style={{ scale, opacity }}
+        style={{
+          scale,
+          opacity,
+          transformStyle: 'preserve-3d',
+        }}
       >
+        {/* Outer glow layer */}
         <motion.div
-          className="w-64 h-64 md:w-96 md:h-96 rounded-full liquid-sphere relative"
+          className="absolute -inset-20 rounded-full pointer-events-none"
           animate={{
-            scale: isNear ? [1, 1.05, 1] : 1,
-            rotateX: mousePos.y,
+            background: isNear
+              ? 'radial-gradient(circle, rgba(255,255,255,0.15) 0%, transparent 70%)'
+              : 'radial-gradient(circle, rgba(255,255,255,0.05) 0%, transparent 60%)',
+          }}
+          transition={{ duration: 0.5 }}
+        />
+
+        {/* Main 3D Sphere with multiple layers */}
+        <motion.div
+          className="relative w-64 h-64 md:w-[28rem] md:h-[28rem] rounded-full"
+          animate={{
+            rotateX: -mousePos.y,
             rotateY: mousePos.x,
+            scale: isNear ? [1, 1.03, 1] : 1,
           }}
           transition={{
             scale: {
@@ -378,52 +471,80 @@ const LiquidMercurySphere = () => {
               repeat: isNear ? Infinity : 0,
               ease: 'easeInOut',
             },
-            rotateX: { type: 'spring', stiffness: 100, damping: 20 },
-            rotateY: { type: 'spring', stiffness: 100, damping: 20 },
+            rotateX: { type: 'spring', stiffness: 80, damping: 15 },
+            rotateY: { type: 'spring', stiffness: 80, damping: 15 },
           }}
           style={{
             transformStyle: 'preserve-3d',
-            boxShadow: isNear
-              ? '0 0 100px rgba(255, 255, 255, 0.3), inset 0 0 60px rgba(255, 255, 255, 0.2)'
-              : '0 0 60px rgba(255, 255, 255, 0.1), inset 0 0 40px rgba(255, 255, 255, 0.1)',
           }}
         >
-          {/* Inner glow */}
-          <div className="absolute inset-4 rounded-full bg-gradient-to-br from-white/30 via-transparent to-transparent" />
+          {/* Layer 1: Base liquid */}
+          <div className="absolute inset-0 rounded-full liquid-sphere" />
 
-          {/* Highlight reflection */}
+          {/* Layer 2: Inner depth shadow */}
+          <div
+            className="absolute inset-0 rounded-full sphere-layer-2"
+            style={{ transform: 'translateZ(-10px)' }}
+          />
+
+          {/* Layer 3: Surface reflection */}
           <motion.div
-            className="absolute top-8 left-8 w-16 h-16 rounded-full bg-white/60 blur-md"
+            className="absolute inset-2 rounded-full sphere-layer-1"
             animate={{
-              x: mousePos.x * 2,
-              y: mousePos.y * 2,
+              x: mousePos.x * 0.5,
+              y: mousePos.y * 0.5,
+            }}
+            style={{ transform: 'translateZ(20px)' }}
+          />
+
+          {/* Layer 4: Chrome highlight */}
+          <motion.div
+            className="absolute top-4 left-4 w-20 h-20 md:w-28 md:h-28 rounded-full bg-white/70 blur-md"
+            animate={{
+              x: mousePos.x * 3,
+              y: mousePos.y * 3,
             }}
             transition={{ type: 'spring', stiffness: 200, damping: 20 }}
+            style={{
+              transform: 'translateZ(40px)',
+              filter: 'blur(8px)',
+            }}
           />
+
+          {/* Layer 5: Bottom reflection */}
+          <div
+            className="absolute -bottom-8 left-1/2 -translate-x-1/2 w-48 h-8 bg-white/10 blur-xl rounded-full"
+            style={{ transform: 'translateZ(-30px)' }}
+          />
+
+          {/* Specular highlights */}
+          <div className="absolute top-8 right-12 w-4 h-4 rounded-full bg-white/90 blur-[2px]" style={{ transform: 'translateZ(35px)' }} />
+          <div className="absolute bottom-16 left-12 w-2 h-2 rounded-full bg-white/60 blur-[1px]" style={{ transform: 'translateZ(30px)' }} />
         </motion.div>
 
         {/* Orbiting particles */}
-        {[...Array(3)].map((_, i) => (
+        {[...Array(4)].map((_, i) => (
           <motion.div
             key={i}
-            className="absolute top-1/2 left-1/2 w-2 h-2 rounded-full bg-orange-500"
+            className="absolute top-1/2 left-1/2"
             animate={{
-              x: [0, Math.cos(i * 2.09) * 200, 0],
-              y: [0, Math.sin(i * 2.09) * 200, 0],
+              x: [0, Math.cos(i * 1.57) * 180, 0],
+              y: [0, Math.sin(i * 1.57) * 180, 0],
               opacity: [0, 1, 0],
             }}
             transition={{
-              duration: 4,
+              duration: 5,
               repeat: Infinity,
-              delay: i * 1.3,
+              delay: i * 1.25,
               ease: 'easeInOut',
             }}
             style={{
               translateX: '-50%',
               translateY: '-50%',
-              boxShadow: '0 0 10px #FF4D00',
             }}
-          />
+          >
+            <div className="w-3 h-3 rounded-full bg-orange-500 shadow-lg shadow-orange-500/50" />
+          </motion.div>
         ))}
       </motion.div>
     </div>
@@ -444,6 +565,11 @@ const HeroSection = () => {
         }} />
       </div>
 
+      {/* Animated background gradient */}
+      <div className="absolute inset-0 opacity-30">
+        <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[800px] h-[800px] rounded-full bg-gradient-radial from-white/5 to-transparent blur-3xl" />
+      </div>
+
       {/* Liquid Sphere */}
       <LiquidMercurySphere />
 
@@ -454,23 +580,11 @@ const HeroSection = () => {
         transition={{ duration: 1, delay: 0.5 }}
         className="absolute inset-0 flex items-center justify-center pointer-events-none"
       >
-        <h1 className="font-serif text-5xl md:text-8xl lg:text-9xl font-black tracking-tighter text-center leading-none">
-          <span className="block chrome-text" style={{
-            backgroundImage: 'linear-gradient(135deg, #ffffff 0%, #c0c0c0 25%, #ffffff 50%, #a0a0a0 75%, #ffffff 100%)',
-            backgroundSize: '200% auto',
-            WebkitBackgroundClip: 'text',
-            backgroundClip: 'text',
-            WebkitTextFillColor: 'transparent',
-          }}>
+        <h1 className="font-sans text-5xl md:text-8xl lg:text-[10rem] font-bold tracking-tighter text-center leading-[0.9]">
+          <span className="block chrome-text">
             WEALTH IN
           </span>
-          <span className="block chrome-text" style={{
-            backgroundImage: 'linear-gradient(135deg, #ffffff 0%, #c0c0c0 25%, #ffffff 50%, #a0a0a0 75%, #ffffff 100%)',
-            backgroundSize: '200% auto',
-            WebkitBackgroundClip: 'text',
-            backgroundClip: 'text',
-            WebkitTextFillColor: 'transparent',
-          }}>
+          <span className="block chrome-text">
             FLUID MOTION
           </span>
         </h1>
@@ -511,7 +625,7 @@ const HeroSection = () => {
 }
 
 // ============================================
-// ALCHEMICAL VAULT SECTION
+// ALCHEMICAL VAULT SECTION - CENTERED TITLE
 // ============================================
 const AlchemicalVault = () => {
   const containerRef = useRef(null)
@@ -520,138 +634,229 @@ const AlchemicalVault = () => {
     offset: ['start end', 'end start'],
   })
 
-  const x = useTransform(scrollYProgress, [0, 1], ['0%', '-50%'])
-  const rotate = useTransform(scrollYProgress, [0, 0.5, 1], [0, 180, 360])
+  const x = useTransform(scrollYProgress, [0, 1], ['5%', '-45%'])
 
+  // Predefined assets with Ethereum included
   const assets = [
-    { symbol: 'AU', name: 'GOLD', color: 'from-yellow-400 to-yellow-600' },
-    { symbol: 'BTC', name: 'BITCOIN', color: 'from-orange-400 to-orange-600' },
-    { symbol: 'USD', name: 'DOLLAR', color: 'from-green-400 to-green-600' },
-    { symbol: 'ETH', name: 'ETHEREUM', color: 'from-purple-400 to-purple-600' },
-    { symbol: 'AU', name: 'GOLD', color: 'from-yellow-400 to-yellow-600' },
-    { symbol: 'BTC', name: 'BITCOIN', color: 'from-orange-400 to-orange-600' },
+    {
+      symbol: 'ETH',
+      name: 'ETHEREUM',
+      fullName: 'Ethereum 2.0',
+      color: 'from-purple-500 to-blue-600',
+      price: '$3,247.82',
+      change: '+12.4%',
+      icon: 'diamond'
+    },
+    {
+      symbol: 'BTC',
+      name: 'BITCOIN',
+      fullName: 'Bitcoin',
+      color: 'from-orange-400 to-amber-600',
+      price: '$67,432.18',
+      change: '+8.2%',
+      icon: 'circle'
+    },
+    {
+      symbol: 'AU',
+      name: 'GOLD',
+      fullName: 'Digital Gold',
+      color: 'from-yellow-300 to-yellow-600',
+      price: '$2,145.30',
+      change: '+3.1%',
+      icon: 'hexagon'
+    },
+    {
+      symbol: 'USD',
+      name: 'DOLLAR',
+      fullName: 'USDC Stable',
+      color: 'from-green-400 to-emerald-600',
+      price: '$1.00',
+      change: '+0.01%',
+      icon: 'triangle'
+    },
+    {
+      symbol: 'SOL',
+      name: 'SOLANA',
+      fullName: 'Solana',
+      color: 'from-purple-400 to-pink-600',
+      price: '$178.45',
+      change: '+24.7%',
+      icon: 'zap'
+    },
+    {
+      symbol: 'AVAX',
+      name: 'AVALANCHE',
+      fullName: 'Avalanche',
+      color: 'from-red-400 to-red-600',
+      price: '$42.18',
+      change: '+15.3%',
+      icon: 'activity'
+    },
   ]
 
   return (
     <section id="vault" className="relative py-32 overflow-hidden" ref={containerRef}>
-      <div className="px-8 mb-16">
-        <motion.h2
-          initial={{ opacity: 0, x: -50 }}
-          whileInView={{ opacity: 1, x: 0 }}
+      {/* Centered Title */}
+      <div className="px-8 mb-20 text-center">
+        <motion.div
+          initial={{ opacity: 0, y: 30 }}
+          whileInView={{ opacity: 1, y: 0 }}
           viewport={{ once: true }}
-          className="font-serif text-6xl md:text-8xl font-black chrome-text mb-4"
+          className="inline-flex flex-col items-center"
         >
-          THE ALCHEMICAL
-        </motion.h2>
-        <motion.h2
-          initial={{ opacity: 0, x: -50 }}
-          whileInView={{ opacity: 1, x: 0 }}
-          viewport={{ once: true }}
-          transition={{ delay: 0.1 }}
-          className="font-serif text-6xl md:text-8xl font-black text-orange-500"
-        >
-          VAULT
-        </motion.h2>
+          <span className="font-mono text-[10px] tracking-[0.3em] text-gray-500 mb-4">SECTION_02</span>
+          <h2 className="font-sans text-5xl md:text-7xl lg:text-8xl font-bold chrome-text mb-4">
+            THE ALCHEMICAL
+          </h2>
+          <h2 className="font-sans text-5xl md:text-7xl lg:text-8xl font-bold text-orange-500">
+            VAULT
+          </h2>
+          <div className="mt-6 w-24 h-[1px] bg-gradient-to-r from-transparent via-orange-500 to-transparent" />
+        </motion.div>
       </div>
 
       {/* Horizontal Scroll Container */}
-      <div className="relative h-[600px] overflow-hidden">
+      <div className="relative h-[500px] overflow-hidden">
         <motion.div
-          className="absolute flex gap-8 px-8"
+          className="absolute flex gap-6 px-8 items-center h-full"
           style={{ x }}
         >
           {assets.map((asset, index) => (
-            <GlassShard
-              key={index}
+            <ModernCard
+              key={asset.symbol}
               asset={asset}
               index={index}
               scrollProgress={scrollYProgress}
             />
           ))}
         </motion.div>
-
-        {/* Liquid Stream Effect */}
-        <motion.div
-          className="absolute bottom-0 left-0 right-0 h-2 bg-gradient-to-r from-transparent via-orange-500 to-transparent"
-          style={{
-            opacity: useTransform(scrollYProgress, [0.3, 0.7], [0, 1]),
-          }}
-        />
       </div>
 
       {/* Technical specs */}
-      <div className="px-8 mt-16 grid md:grid-cols-3 gap-8">
-        {[
-          { label: 'TOTAL_LOCKED', value: '$2.4B' },
-          { label: 'YIELD_RATE', value: '12.8%' },
-          { label: 'LIQUIDITY', value: 'INSTANT' },
-        ].map((stat, index) => (
-          <motion.div
-            key={stat.label}
-            initial={{ opacity: 0, y: 30 }}
-            whileInView={{ opacity: 1, y: 0 }}
-            viewport={{ once: true }}
-            transition={{ delay: index * 0.1 }}
-            className="border border-gray-800 p-6 hover:border-orange-500/50 transition-colors"
-          >
-            <div className="font-mono text-[10px] text-gray-500 mb-2">{stat.label}</div>
-            <div className="font-serif text-4xl text-white">{stat.value}</div>
-          </motion.div>
-        ))}
+      <div className="px-8 mt-20 max-w-6xl mx-auto">
+        <div className="grid md:grid-cols-3 gap-6">
+          {[
+            { label: 'TOTAL_LOCKED', value: '$2.4B', subtext: 'Across all assets' },
+            { label: 'YIELD_RATE', value: '12.8%', subtext: 'APY average' },
+            { label: 'LIQUIDITY', value: 'INSTANT', subtext: 'Zero slippage' },
+          ].map((stat, index) => (
+            <motion.div
+              key={stat.label}
+              initial={{ opacity: 0, y: 30 }}
+              whileInView={{ opacity: 1, y: 0 }}
+              viewport={{ once: true }}
+              transition={{ delay: index * 0.1 }}
+              className="card-gradient-border p-6 rounded-xl hover:border-orange-500/30 transition-all duration-500 group"
+            >
+              <div className="font-mono text-[10px] text-gray-500 mb-2 tracking-widest">{stat.label}</div>
+              <div className="font-sans text-4xl font-bold text-white mb-1 group-hover:text-orange-500 transition-colors">{stat.value}</div>
+              <div className="font-mono text-[10px] text-gray-600">{stat.subtext}</div>
+            </motion.div>
+          ))}
+        </div>
       </div>
     </section>
   )
 }
 
-const GlassShard = ({ asset, index, scrollProgress }) => {
-  const rotateY = useTransform(scrollProgress, [0, 1], [0, 360 + index * 60])
-  const scale = useTransform(scrollProgress, [0, 0.5, 1], [1, 1.2, 0.8])
-  const melt = useTransform(scrollProgress, [0.3, 0.7], [0, 1])
+// ============================================
+// MODERN CARD DESIGN
+// ============================================
+const ModernCard = ({ asset, index, scrollProgress }) => {
+  const rotateY = useTransform(scrollProgress, [0, 1], [-15, 15])
+  const y = useTransform(scrollProgress, [0, 0.5, 1], [50, 0, 50])
 
   return (
     <motion.div
-      className="relative w-72 h-96 flex-shrink-0"
+      className="relative w-80 h-[420px] flex-shrink-0 group"
       style={{
         rotateY,
-        scale,
+        y,
         transformStyle: 'preserve-3d',
         perspective: 1000,
       }}
     >
-      {/* Glass shard effect */}
-      <div className="absolute inset-0 bg-gradient-to-br from-white/10 to-transparent backdrop-blur-sm border border-white/20 rounded-2xl overflow-hidden">
-        {/* Inner gradient */}
+      {/* Card container with gradient border */}
+      <div className="absolute inset-0 card-gradient-border rounded-2xl overflow-hidden transition-all duration-500 group-hover:scale-[1.02]">
+
+        {/* Background gradient */}
         <div className={cn(
-          "absolute inset-0 bg-gradient-to-br opacity-30",
+          "absolute inset-0 bg-gradient-to-br opacity-20 group-hover:opacity-30 transition-opacity duration-500",
           asset.color
         )} />
 
-        {/* Content */}
-        <div className="absolute inset-0 flex flex-col items-center justify-center p-8">
-          <motion.div
-            className="w-24 h-24 rounded-full bg-gradient-to-br from-white/20 to-transparent border border-white/30 flex items-center justify-center mb-6"
-            style={{
-              boxShadow: `0 0 40px rgba(255, 77, 0, ${0.3})`,
-            }}
-          >
-            <span className="font-mono text-2xl font-bold text-white">{asset.symbol}</span>
-          </motion.div>
+        {/* Grid pattern overlay */}
+        <div className="absolute inset-0 opacity-10" style={{
+          backgroundImage: 'linear-gradient(rgba(255,255,255,0.1) 1px, transparent 1px), linear-gradient(90deg, rgba(255,255,255,0.1) 1px, transparent 1px)',
+          backgroundSize: '20px 20px',
+        }} />
 
-          <h3 className="font-serif text-2xl text-white mb-2">{asset.name}</h3>
-          <div className="font-mono text-[10px] text-gray-400 tracking-widest">
-            ASSET_CLASS_{index + 1}
+        {/* Glow effect on hover */}
+        <div className={cn(
+          "absolute -inset-1 opacity-0 group-hover:opacity-100 transition-opacity duration-700 blur-xl",
+          asset.color.replace('from-', 'bg-').split(' ')[0]
+        )} />
+
+        {/* Content */}
+        <div className="relative h-full flex flex-col p-6">
+          {/* Header */}
+          <div className="flex items-start justify-between mb-8">
+            <div className="flex items-center gap-3">
+              <div className={cn(
+                "w-12 h-12 rounded-xl bg-gradient-to-br flex items-center justify-center shadow-lg",
+                asset.color
+              )}>
+                <SafeIcon name={asset.icon} size={24} className="text-white" />
+              </div>
+              <div>
+                <div className="font-sans text-lg font-bold text-white">{asset.symbol}</div>
+                <div className="font-mono text-[10px] text-gray-500 tracking-wider">{asset.fullName}</div>
+              </div>
+            </div>
+            <div className="flex items-center gap-1 text-green-400">
+              <SafeIcon name="trending-up" size={14} />
+              <span className="font-mono text-xs">{asset.change}</span>
+            </div>
           </div>
+
+          {/* Price */}
+          <div className="mb-8">
+            <div className="font-mono text-[10px] text-gray-500 mb-1 tracking-widest">CURRENT_PRICE</div>
+            <div className="font-sans text-4xl font-bold text-white tracking-tight">{asset.price}</div>
+          </div>
+
+          {/* Chart placeholder */}
+          <div className="flex-1 flex items-end">
+            <div className="w-full h-24 flex items-end gap-1">
+              {[...Array(20)].map((_, i) => (
+                <motion.div
+                  key={i}
+                  className={cn(
+                    "flex-1 rounded-t-sm bg-gradient-to-t opacity-60",
+                    asset.color
+                  )}
+                  initial={{ height: '20%' }}
+                  whileInView={{ height: `${20 + Math.random() * 60}%` }}
+                  transition={{ delay: i * 0.05, duration: 0.5 }}
+                />
+              ))}
+            </div>
+          </div>
+
+          {/* Action button */}
+          <button className="mt-6 w-full py-3 rounded-lg bg-white/5 hover:bg-white/10 border border-white/10 hover:border-white/20 transition-all font-mono text-xs tracking-widest text-gray-300 hover:text-white">
+            TRADE_{asset.symbol}
+          </button>
         </div>
 
-        {/* Melting effect overlay */}
-        <motion.div
-          className="absolute inset-0 bg-gradient-to-b from-transparent via-orange-500/20 to-orange-500/40"
-          style={{ opacity: melt }}
-        />
+        {/* Corner accents */}
+        <div className="absolute top-0 right-0 w-20 h-20 overflow-hidden">
+          <div className={cn(
+            "absolute top-0 right-0 w-full h-full bg-gradient-to-bl opacity-20",
+            asset.color
+          )} />
+        </div>
       </div>
-
-      {/* Reflection */}
-      <div className="absolute -bottom-8 left-1/2 -translate-x-1/2 w-48 h-8 bg-gradient-to-b from-white/10 to-transparent blur-xl rounded-full" />
     </motion.div>
   )
 }
@@ -662,7 +867,6 @@ const GlassShard = ({ asset, index, scrollProgress }) => {
 const PulseVisualization = () => {
   const canvasRef = useRef(null)
   const [ripples, setRipples] = useState([])
-  const animationRef = useRef(null)
 
   useEffect(() => {
     const canvas = canvasRef.current
@@ -671,11 +875,11 @@ const PulseVisualization = () => {
     const ctx = canvas.getContext('2d')
     let width = canvas.width = window.innerWidth
     let height = canvas.height = 400
+    let animationId
 
     const particles = []
-    const particleCount = 50
+    const particleCount = 60
 
-    // Create particles
     for (let i = 0; i < particleCount; i++) {
       particles.push({
         x: (width / particleCount) * i,
@@ -683,36 +887,36 @@ const PulseVisualization = () => {
         baseY: height / 2,
         speed: 0.02 + Math.random() * 0.02,
         offset: Math.random() * Math.PI * 2,
-        amplitude: 20 + Math.random() * 30,
+        amplitude: 30 + Math.random() * 40,
       })
     }
 
     let time = 0
 
     const animate = () => {
-      ctx.fillStyle = 'rgba(5, 5, 5, 0.1)'
+      ctx.fillStyle = 'rgba(5, 5, 5, 0.08)'
       ctx.fillRect(0, 0, width, height)
 
-      // Draw connecting line
       ctx.beginPath()
       ctx.strokeStyle = '#FF4D00'
-      ctx.lineWidth = 2
+      ctx.lineWidth = 3
+      ctx.lineCap = 'round'
 
       particles.forEach((particle, i) => {
-        // Heartbeat wave pattern
         const wave = Math.sin(time * particle.speed + particle.offset) * particle.amplitude
-        const heartbeat = Math.sin(time * 0.1) > 0.8 ? Math.sin(time * 0.5) * 20 : 0
+        const heartbeat = Math.sin(time * 0.08) > 0.85 ? Math.sin(time * 0.4) * 30 : 0
 
-        particle.y = particle.baseY + wave + heartbeat
+        let finalY = particle.baseY + wave + heartbeat
 
-        // Apply ripple effects
         ripples.forEach(ripple => {
           const dist = Math.abs(particle.x - ripple.x)
           if (dist < ripple.radius) {
             const rippleEffect = Math.sin((dist / ripple.radius) * Math.PI) * ripple.strength
-            particle.y += rippleEffect * Math.sin(time * 0.2)
+            finalY += rippleEffect * Math.sin(time * 0.15)
           }
         })
+
+        particle.y = finalY
 
         if (i === 0) {
           ctx.moveTo(particle.x, particle.y)
@@ -724,32 +928,28 @@ const PulseVisualization = () => {
         }
       })
 
-      ctx.stroke()
-
-      // Draw glow
       ctx.shadowColor = '#FF4D00'
       ctx.shadowBlur = 20
       ctx.stroke()
       ctx.shadowBlur = 0
 
-      // Draw particles
+      // Draw glow particles
       particles.forEach((particle, i) => {
-        if (i % 3 === 0) { // Draw every 3rd particle
+        if (i % 4 === 0) {
           ctx.beginPath()
           ctx.fillStyle = '#FF4D00'
-          ctx.arc(particle.x, particle.y, 3, 0, Math.PI * 2)
+          ctx.arc(particle.x, particle.y, 4, 0, Math.PI * 2)
           ctx.fill()
 
-          // Glow
           ctx.shadowColor = '#FF4D00'
-          ctx.shadowBlur = 10
+          ctx.shadowBlur = 15
           ctx.fill()
           ctx.shadowBlur = 0
         }
       })
 
       time += 1
-      animationRef.current = requestAnimationFrame(animate)
+      animationId = requestAnimationFrame(animate)
     }
 
     animate()
@@ -757,7 +957,6 @@ const PulseVisualization = () => {
     const handleResize = () => {
       width = canvas.width = window.innerWidth
       height = canvas.height = 400
-      // Reinitialize particles
       particles.length = 0
       for (let i = 0; i < particleCount; i++) {
         particles.push({
@@ -766,7 +965,7 @@ const PulseVisualization = () => {
           baseY: height / 2,
           speed: 0.02 + Math.random() * 0.02,
           offset: Math.random() * Math.PI * 2,
-          amplitude: 20 + Math.random() * 30,
+          amplitude: 30 + Math.random() * 40,
         })
       }
     }
@@ -774,7 +973,7 @@ const PulseVisualization = () => {
     window.addEventListener('resize', handleResize)
 
     return () => {
-      cancelAnimationFrame(animationRef.current)
+      cancelAnimationFrame(animationId)
       window.removeEventListener('resize', handleResize)
     }
   }, [ripples])
@@ -786,20 +985,19 @@ const PulseVisualization = () => {
     const newRipple = {
       x,
       radius: 0,
-      strength: 50,
+      strength: 60,
       id: Date.now(),
     }
 
     setRipples(prev => [...prev, newRipple])
 
-    // Animate ripple
     const animateRipple = () => {
       setRipples(prev => prev.map(ripple => {
         if (ripple.id === newRipple.id) {
           return {
             ...ripple,
-            radius: ripple.radius + 5,
-            strength: Math.max(0, ripple.strength - 1),
+            radius: ripple.radius + 8,
+            strength: Math.max(0, ripple.strength - 1.5),
           }
         }
         return ripple
@@ -807,17 +1005,17 @@ const PulseVisualization = () => {
     }
 
     const interval = setInterval(animateRipple, 16)
-    setTimeout(() => clearInterval(interval), 1000)
+    setTimeout(() => clearInterval(interval), 800)
   }
 
   return (
     <section id="pulse" className="relative py-32 overflow-hidden">
-      <div className="px-8 mb-16">
+      <div className="px-8 mb-16 text-center">
         <motion.h2
           initial={{ opacity: 0 }}
           whileInView={{ opacity: 1 }}
           viewport={{ once: true }}
-          className="font-serif text-6xl md:text-8xl font-black text-center mb-4"
+          className="font-sans text-5xl md:text-7xl lg:text-8xl font-bold mb-4"
         >
           <span className="chrome-text">THE </span>
           <span className="text-orange-500">PULSE</span>
@@ -827,7 +1025,7 @@ const PulseVisualization = () => {
           whileInView={{ opacity: 1 }}
           viewport={{ once: true }}
           transition={{ delay: 0.2 }}
-          className="font-mono text-xs text-gray-500 text-center tracking-widest"
+          className="font-mono text-xs text-gray-500 tracking-widest"
         >
           CLICK TO DISTURB THE FLOW
         </motion.p>
@@ -845,7 +1043,6 @@ const PulseVisualization = () => {
           className="w-full h-[400px] cursor-crosshair"
         />
 
-        {/* Overlay stats */}
         <div className="absolute top-4 left-8 font-mono text-[10px] text-gray-500">
           <div>HEART_RATE: 72 BPM</div>
           <div>FLOW_STABILITY: 98.4%</div>
@@ -853,8 +1050,7 @@ const PulseVisualization = () => {
         </div>
       </motion.div>
 
-      {/* Data grid */}
-      <div className="px-8 mt-16">
+      <div className="px-8 mt-16 max-w-6xl mx-auto">
         <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
           {[
             { label: 'TRANSACTIONS', value: '1.2M' },
@@ -868,10 +1064,10 @@ const PulseVisualization = () => {
               whileInView={{ opacity: 1, y: 0 }}
               viewport={{ once: true }}
               transition={{ delay: index * 0.1 }}
-              className="border border-gray-800 p-4 text-center hover:border-orange-500/30 transition-colors"
+              className="card-gradient-border p-4 text-center hover:border-orange-500/30 transition-colors"
             >
               <div className="font-mono text-[10px] text-gray-500 mb-1">{item.label}</div>
-              <div className="font-serif text-2xl text-white">{item.value}</div>
+              <div className="font-sans text-2xl font-bold text-white">{item.value}</div>
             </motion.div>
           ))}
         </div>
@@ -891,7 +1087,7 @@ const AccessSection = () => {
           initial={{ opacity: 0, y: 50 }}
           whileInView={{ opacity: 1, y: 0 }}
           viewport={{ once: true }}
-          className="font-serif text-5xl md:text-7xl font-black mb-8"
+          className="font-sans text-5xl md:text-7xl font-bold mb-8"
         >
           <span className="chrome-text">ACCESS THE </span>
           <span className="text-orange-500">PROTOCOL</span>
@@ -915,24 +1111,21 @@ const AccessSection = () => {
           className="flex flex-col sm:flex-row gap-4 justify-center"
         >
           <motion.button
-            className="group relative px-12 py-6 bg-white text-black font-mono text-sm tracking-widest overflow-hidden"
+            className="group relative px-12 py-5 bg-white text-black font-mono text-sm tracking-widest overflow-hidden rounded-lg"
             whileHover={{ scale: 1.02 }}
             whileTap={{ scale: 0.98 }}
           >
-            <span className="relative z-10">INITIATE_ACCESS</span>
+            <span className="relative z-10 group-hover:text-white transition-colors">INITIATE_ACCESS</span>
             <motion.div
               className="absolute inset-0 bg-orange-500"
               initial={{ x: '-100%' }}
               whileHover={{ x: 0 }}
               transition={{ duration: 0.3 }}
             />
-            <span className="absolute inset-0 flex items-center justify-center text-black font-mono text-sm tracking-widest opacity-0 group-hover:opacity-100 transition-opacity z-20">
-              INITIATE_ACCESS
-            </span>
           </motion.button>
 
           <motion.button
-            className="px-12 py-6 border border-gray-700 text-white font-mono text-sm tracking-widest hover:border-white transition-colors"
+            className="px-12 py-5 border border-gray-700 text-white font-mono text-sm tracking-widest hover:border-white transition-colors rounded-lg"
             whileHover={{ scale: 1.02 }}
             whileTap={{ scale: 0.98 }}
           >
@@ -940,7 +1133,6 @@ const AccessSection = () => {
           </motion.button>
         </motion.div>
 
-        {/* Decorative elements */}
         <motion.div
           initial={{ opacity: 0 }}
           whileInView={{ opacity: 1 }}
@@ -948,10 +1140,14 @@ const AccessSection = () => {
           transition={{ delay: 0.5 }}
           className="mt-24 flex justify-center gap-8 text-gray-600"
         >
-          {['AUDITED', 'INSURED', 'DECENTRALIZED'].map((item) => (
-            <div key={item} className="flex items-center gap-2">
-              <SafeIcon name="zap" size={12} className="text-orange-500" />
-              <span className="font-mono text-[10px] tracking-widest">{item}</span>
+          {[
+            { icon: 'shield', text: 'AUDITED' },
+            { icon: 'lock', text: 'INSURED' },
+            { icon: 'zap', text: 'DECENTRALIZED' }
+          ].map((item) => (
+            <div key={item.text} className="flex items-center gap-2">
+              <SafeIcon name={item.icon} size={14} className="text-orange-500" />
+              <span className="font-mono text-[10px] tracking-widest">{item.text}</span>
             </div>
           ))}
         </motion.div>
@@ -966,8 +1162,8 @@ const AccessSection = () => {
 const Footer = () => {
   return (
     <footer className="border-t border-gray-800 py-12 px-8">
-      <div className="max-w-7xl mx-auto flex flex-col md:flex-row justify-between items-center gap-8">
-        <div className="font-serif text-2xl tracking-widest chrome-text">
+      <div className="max-w-6xl mx-auto flex flex-col md:flex-row justify-between items-center gap-8">
+        <div className="font-sans text-2xl font-bold tracking-tight chrome-text">
           AETHER
         </div>
 
@@ -984,7 +1180,7 @@ const Footer = () => {
         </div>
 
         <div className="font-mono text-[10px] text-gray-600">
-          © 2024 AETHER PROTOCOL. ALL RIGHTS RESERVED.
+          2024 AETHER PROTOCOL. ALL RIGHTS RESERVED.
         </div>
       </div>
     </footer>
@@ -1000,11 +1196,11 @@ function App() {
       {/* Noise Overlay */}
       <div className="noise-overlay" />
 
-      {/* Custom Cursor */}
+      {/* Custom Cursor - Now More Visible */}
       <LiquidCursor />
 
-      {/* Navigation */}
-      <GravityNav />
+      {/* Transforming Navigation */}
+      <TransformingHeader />
 
       {/* Main Content */}
       <main>
