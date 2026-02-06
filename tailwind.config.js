@@ -3,7 +3,7 @@ export default {
   theme: {
     extend: {
       fontFamily: {
-        serif: ['Playfair Display', 'serif'],
+        sans: ['Space Grotesk', 'sans-serif'],
         mono: ['JetBrains Mono', 'monospace'],
       },
       colors: {
